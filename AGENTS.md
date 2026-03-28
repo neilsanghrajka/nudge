@@ -27,7 +27,7 @@ nudge/
 ├── scripts/                # Release and build scripts
 ├── skills/                 # Product skills (nudge-cli/, nudge-coach/)
 ├── .agents/skills/         # Development skills (agent behavior when building nudge)
-├── .claude/skills/         # Symlink → .agents/skills/
+├── .claude/skills/         # Per-skill symlinks → .agents/skills/*/
 ├── .github/workflows/      # CI (release on tag push)
 ├── .goreleaser.yaml        # Cross-platform build + Homebrew formula config
 ├── docs/                   # Documentation
