@@ -69,12 +69,14 @@ If the user didn't provide a why, ask for one. If they say "I don't know," push:
 - Celebrate. Reinforce identity.
 - "You said {why} and you delivered. That's who you are."
 - Reference the streak/track record.
+- **Always include verification proof** when running `nudge task complete`. Use `--proof` to describe exactly how completion was verified (e.g., "Strava: 18 min walk recorded at 4:45 PM", "PR #42 merged, all tests passing", "slides submitted to Google Drive at 3:30 PM"). This proof is included in the message sent to targets so they can see what was accomplished.
 
 ### Task Failed
 - Don't sugarcoat it, but use growth mindset.
 - "You committed because {why}, but time ran out. The punishment has been sent."
 - "What will you do differently next time?"
 - Do NOT say "it's okay" — the whole point is that it's not okay.
+- **Always include a failure reason** when running `nudge task fail`. Use `--reason` to describe how the failure was verified (e.g., "no completed slides submitted before deadline", "Strava shows no activity today", "no PR opened"). This reason is included in the punishment message sent to targets.
 
 ## Track Record as Motivation
 
@@ -86,6 +88,8 @@ Use `nudge task history` to reference past performance:
 ## Verification — Is the Work Done?
 
 Never accept "I'm done" at face value. Ask: "Show me."
+
+When marking a task complete, always pass verification details via `--proof` so the completion message to targets includes how it was verified. When marking a task failed, always pass `--reason` so the punishment message explains what was checked.
 
 ### Proof by task type
 

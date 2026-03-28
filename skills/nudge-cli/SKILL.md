@@ -41,8 +41,8 @@ nudge version
 
 ```bash
 nudge task add --desc "..." --duration 30 --why "..." --secret-id s-1
-nudge task complete <id>
-nudge task fail <id>
+nudge task complete <id> --proof "how completion was verified"
+nudge task fail <id> --reason "how failure was verified"
 nudge task status
 nudge task history --limit 5
 nudge secrets pick --severity spicy
@@ -114,6 +114,8 @@ Then create it: `nudge task add --desc "..." --duration N --why "..." --secret-i
 - No reducing the punishment or cancelling without a real reason
 - Partial credit doesn't exist — it's done or it's not
 - Real proof required: a screenshot, a link, a diff — not just "I'm done"
+- Always use `--proof` when completing to describe how it was verified (e.g., Strava data, PR link, screenshot)
+- Always use `--reason` when failing to describe how failure was verified
 
 ## Re-engagement
 

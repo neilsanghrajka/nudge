@@ -187,10 +187,18 @@ func taskAdd(args []string) {
 
 func taskComplete(args []string) {
 	if len(args) == 0 {
-		exitErr("task complete", "missing task_id. Example: nudge task complete task-1", "MISSING_ID")
+		exitErr("task complete", "missing task_id. Example: nudge task complete task-1 --proof 'Strava: 18 min walk'", "MISSING_ID")
 		return
 	}
-	t, results, err := task.Complete(args[0])
+	taskID := args[0]
+	var proof string
+	for i := 1; i < len(args); i++ {
+		if args[i] == "--proof" && i+1 < len(args) {
+			i++
+			proof = args[i]
+		}
+	}
+	t, results, err := task.Complete(taskID, proof)
 	if err != nil {
 		exitErr("task complete", err.Error(), "COMPLETE_FAILED")
 		return
@@ -198,15 +206,26 @@ func taskComplete(args []string) {
 	outputOK("task complete", map[string]any{"task": t, "messages_sent": results})
 	if !jsonMode {
 		fmt.Printf("\n  Task '%s' completed!\n", t.ID)
+		if proof != "" {
+			fmt.Printf("  Proof: %s\n", proof)
+		}
 	}
 }
 
 func taskFail(args []string) {
 	if len(args) == 0 {
-		exitErr("task fail", "missing task_id. Example: nudge task fail task-1", "MISSING_ID")
+		exitErr("task fail", "missing task_id. Example: nudge task fail task-1 --reason 'no slides submitted'", "MISSING_ID")
 		return
 	}
-	t, results, err := task.Fail(args[0])
+	taskID := args[0]
+	var reason string
+	for i := 1; i < len(args); i++ {
+		if args[i] == "--reason" && i+1 < len(args) {
+			i++
+			reason = args[i]
+		}
+	}
+	t, results, err := task.Fail(taskID, reason)
 	if err != nil {
 		exitErr("task fail", err.Error(), "FAIL_FAILED")
 		return
@@ -214,6 +233,9 @@ func taskFail(args []string) {
 	outputOK("task fail", map[string]any{"task": t, "messages_sent": results})
 	if !jsonMode {
 		fmt.Printf("\n  Task '%s' FAILED. Punishment sent.\n", t.ID)
+		if reason != "" {
+			fmt.Printf("  Reason: %s\n", reason)
+		}
 	}
 }
 
@@ -662,7 +684,7 @@ Global flags:
 
 Examples:
   nudge task add --desc "Finish PR" --duration 30 --why "Team waiting"
-  nudge task complete task-1
+  nudge task complete task-1 --proof "PR merged, tests passing"
   nudge secrets add --secret "I sleep with a nightlight" --severity medium
   nudge punishment setup post_to_beeper_whatsapp --token abc123
 
@@ -677,9 +699,9 @@ Usage: nudge task <action> [flags]
 
 Actions:
   add       Create a new task with deadline and consequences
-  complete  Mark task as done (sends all-clear)
+  complete  Mark task as done (sends all-clear) [--proof "..."]
   done      Alias for complete
-  fail      Mark task as failed (executes punishment)
+  fail      Mark task as failed (executes punishment) [--reason "..."]
   cancel    Cancel task (no messages)
   status    Show active tasks with time remaining
   list      List tasks (--all for history)
@@ -688,7 +710,8 @@ Actions:
 Examples:
   nudge task add --desc "Ship feature" --duration 60 --why "Demo tomorrow" --secret-id s-1
   nudge task add --desc "Write tests" --duration 30 --punishment post_to_beeper_whatsapp --targets "!room:..."
-  nudge task complete task-1
+  nudge task complete task-1 --proof "Strava: 18 min walk recorded at 4:45 PM"
+  nudge task fail task-1 --reason "no slides submitted before deadline"
   nudge task status
   nudge task list --all
   nudge task history --limit 5

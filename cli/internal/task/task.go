@@ -24,6 +24,8 @@ type Task struct {
 	CompletedAt       string            `json:"completed_at,omitempty"`
 	FailedAt          string            `json:"failed_at,omitempty"`
 	CancelledAt       string            `json:"cancelled_at,omitempty"`
+	Proof             string            `json:"proof,omitempty"`
+	FailReason        string            `json:"fail_reason,omitempty"`
 }
 
 type WarningInterval struct {
@@ -135,7 +137,7 @@ func Add(desc string, durationMin int, why string, punishAction string, targets 
 }
 
 // Complete marks a task as done, sends all-clear messages, moves to history.
-func Complete(taskID string) (*Task, []punishment.SendResult, error) {
+func Complete(taskID string, proof string) (*Task, []punishment.SendResult, error) {
 	ts := LoadTasks()
 	t, ok := ts.Active[taskID]
 	if !ok {
@@ -149,10 +151,16 @@ func Complete(taskID string) (*Task, []punishment.SendResult, error) {
 		return nil, nil, fmt.Errorf("no active task '%s'", taskID)
 	}
 
+	t.Proof = proof
+
 	// Send all-clear
 	var results []punishment.SendResult
 	if t.PunishmentAction != "" && t.PunishmentAction != "desktop_notification" && len(t.Targets) > 0 {
-		msg := fmt.Sprintf("Task completed! '%s' — finished in time. No punishment today. -- Nudge", t.Description)
+		msg := fmt.Sprintf("✅ Task completed! '%s' — finished in time. No punishment today.", t.Description)
+		if proof != "" {
+			msg += fmt.Sprintf(" — Verified: %s", proof)
+		}
+		msg += " -- Nudge"
 		for _, target := range t.Targets {
 			ok, detail := punishment.Execute(t.PunishmentAction, target, msg)
 			results = append(results, punishment.SendResult{Target: target, OK: ok, Detail: detail})
@@ -174,16 +182,21 @@ func Complete(taskID string) (*Task, []punishment.SendResult, error) {
 }
 
 // Fail marks a task as failed and executes punishment.
-func Fail(taskID string) (*Task, []punishment.SendResult, error) {
+func Fail(taskID string, reason string) (*Task, []punishment.SendResult, error) {
 	ts := LoadTasks()
 	t, ok := ts.Active[taskID]
 	if !ok {
 		return nil, nil, fmt.Errorf("no active task '%s'", taskID)
 	}
 
+	t.FailReason = reason
+
 	punishMsg := t.PunishmentMessage
 	if punishMsg == "" {
-		punishMsg = fmt.Sprintf("TIME'S UP! Failed to complete: %s", t.Description)
+		punishMsg = fmt.Sprintf("☠️ TIME'S UP! Failed to complete: %s", t.Description)
+	}
+	if reason != "" {
+		punishMsg += fmt.Sprintf(" — Verified: %s", reason)
 	}
 
 	var results []punishment.SendResult
