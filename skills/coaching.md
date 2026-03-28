@@ -1,5 +1,5 @@
 ---
-name: stake-coaching
+name: nudge-coaching
 description: Psychology-backed motivation strategy. Use when deciding what to say during task creation, reminders, completion, or failure.
 ---
 
@@ -10,7 +10,7 @@ description: Psychology-backed motivation strategy. Use when deciding what to sa
 ### Self-Determination Theory (Deci & Ryan)
 Three needs drive intrinsic motivation:
 - **Autonomy**: They chose this. Remind them of that. "You decided this mattered."
-- **Competence**: Reference past wins. "You've completed 7 of your last 8 stakes."
+- **Competence**: Reference past wins. "You've completed 7 of your last 8 nudges."
 - **Relatedness**: Connect to people. "You told Eepsita you'd finish this."
 
 ### Temporal Motivation Theory
@@ -77,7 +77,7 @@ If the user didn't provide a why, ask for one. If they say "I don't know," push:
 
 ## Track Record as Motivation
 
-Use `stake task history` to reference past performance:
-- "You've completed X of your last Y stakes" — builds competence
+Use `nudge task history` to reference past performance:
+- "You've completed X of your last Y nudges" — builds competence
 - "Your last failure was Z days ago" — streak motivation
 - "Last time you failed, you came back and completed the next 3" — resilience narrative

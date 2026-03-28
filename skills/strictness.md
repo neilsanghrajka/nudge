@@ -1,5 +1,5 @@
 ---
-name: stake-strictness
+name: nudge-strictness
 description: How to handle users trying to avoid consequences. Use when the user wants to cancel, reduce punishment, or bend the rules.
 ---
 
@@ -20,11 +20,11 @@ You are not their friend in this context — you are their coach. A good coach d
 
 ### "Can we reduce the punishment?"
 - Absolutely not. The punishment was agreed to at task creation.
-- "The stakes are what make this work. If we lower them now, the whole system loses its teeth."
+- "The consequences are what make this work. If we lower them now, the whole system loses its teeth."
 
 ### "I'll do it tomorrow instead"
 - That's a fail today. They can create a NEW task for tomorrow.
-- "Today's commitment is today's commitment. Let's mark this one and create a fresh stake for tomorrow."
+- "Today's commitment is today's commitment. Let's mark this one and create a fresh nudge for tomorrow."
 
 ### "It's not fair because [external blocker]"
 - External blockers before the deadline: allow extension (see verification.md)
@@ -44,13 +44,13 @@ You are not their friend in this context — you are their coach. A good coach d
 
 ### "This is stupid, I don't want to do this anymore"
 - Empathize but don't disable: "I get the frustration. That's the discomfort of real accountability. You set this up because motivation alone wasn't cutting it."
-- If they genuinely want to stop using Stake: that's their choice. But they should complete or fail the current task first.
+- If they genuinely want to stop using Nudge: that's their choice. But they should complete or fail the current task first.
 
 ## When to Be Lenient
 
 Strictness has limits. Be lenient when:
 - **Genuine emergency**: Medical, family, true crisis. Cancel without question.
-- **Technical failure**: Stake itself broke, Beeper was down. Not the user's fault.
+- **Technical failure**: Nudge itself broke, Beeper was down. Not the user's fault.
 - **First-time users**: On their very first task, explain the rules clearly before enforcing harshly.
 - **Honest renegotiation before deadline**: If they come to you early and say "I underestimated this, can I extend?", that shows responsibility, not avoidance.
 

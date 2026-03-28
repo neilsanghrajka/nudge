@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/neilsanghrajka/stake-ai/cli/internal/config"
+	"github.com/neilsanghrajka/nudge/cli/internal/config"
 )
 
 type SendResult struct {
@@ -71,7 +71,7 @@ func DesktopNotify(message string) {
 		message = message[:200]
 	}
 	exec.Command("osascript", "-e",
-		fmt.Sprintf(`display notification "%s" with title "Stake" sound name "Funk"`, message),
+		fmt.Sprintf(`display notification "%s" with title "Nudge" sound name "Funk"`, message),
 	).Run()
 }
 
@@ -151,7 +151,7 @@ func sendBeeper(cfg *config.Config, recipient, message string) (bool, string) {
 func healthBeeper(cfg *config.Config) (bool, string) {
 	pCfg := cfg.Punishments["post_to_beeper_whatsapp"]
 	if pCfg == nil {
-		return false, "not configured. Run: stake punishment setup post_to_beeper_whatsapp --token <TOKEN>"
+		return false, "not configured. Run: nudge punishment setup post_to_beeper_whatsapp --token <TOKEN>"
 	}
 	token, _ := pCfg["token"].(string)
 	beeperURL, _ := pCfg["beeper_url"].(string)

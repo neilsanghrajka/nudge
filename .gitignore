@@ -3,5 +3,5 @@ dist/
 __pycache__/
 *.pyc
 .DS_Store
-/stake
+/nudge
 plugins/*/dist/

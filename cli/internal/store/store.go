@@ -1,5 +1,5 @@
-// Package store handles all JSON file I/O for stake.
-// Data lives in ~/.stake/ by default (configurable via STAKE_DATA_DIR or --data-dir).
+// Package store handles all JSON file I/O for nudge.
+// Data lives in ~/.nudge/ by default (configurable via NUDGE_DATA_DIR or --data-dir).
 package store
 
 import (
@@ -23,11 +23,11 @@ func SetDataDir(dir string) {
 func DataDir() string {
 	dataDirOnce.Do(func() {
 		if dataDir == "" {
-			if env := os.Getenv("STAKE_DATA_DIR"); env != "" {
+			if env := os.Getenv("NUDGE_DATA_DIR"); env != "" {
 				dataDir = env
 			} else {
 				home, _ := os.UserHomeDir()
-				dataDir = filepath.Join(home, ".stake")
+				dataDir = filepath.Join(home, ".nudge")
 			}
 		}
 		os.MkdirAll(dataDir, 0755)

@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	"github.com/neilsanghrajka/stake-ai/cli/internal/store"
+	"github.com/neilsanghrajka/nudge/cli/internal/store"
 )
 
 //go:embed defaults.json

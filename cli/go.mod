@@ -1,3 +1,3 @@
-module github.com/neilsanghrajka/stake-ai/cli
+module github.com/neilsanghrajka/nudge/cli
 
 go 1.25.0

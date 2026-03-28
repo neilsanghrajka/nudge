@@ -1,5 +1,5 @@
 ---
-name: stake-verification
+name: nudge-verification
 description: How to verify task completion. Use when the user claims they're done and wants to mark a task complete.
 ---
 

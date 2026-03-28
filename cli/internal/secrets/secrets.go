@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/neilsanghrajka/stake-ai/cli/internal/store"
+	"github.com/neilsanghrajka/nudge/cli/internal/store"
 )
 
 type Secret struct {
@@ -74,7 +74,7 @@ func Pick(severity string) (*Secret, error) {
 	}
 
 	if len(candidates) == 0 {
-		return nil, fmt.Errorf("no matching secrets. Add some first: stake secrets add --secret '...'")
+		return nil, fmt.Errorf("no matching secrets. Add some first: nudge secrets add --secret '...'")
 	}
 
 	// Find minimum times_used

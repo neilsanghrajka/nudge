@@ -17,10 +17,10 @@
     {"text": "Failure is not the opposite of success; it's part of success.", "attribution": "Arianna Huffington", "category": "resilience", "phase": ["task_failed"]},
     {"text": "The comeback is always stronger than the setback.", "attribution": "Unknown", "category": "resilience", "phase": ["task_failed"]},
     {"text": "Success is not final, failure is not fatal: it is the courage to continue that counts.", "attribution": "Winston Churchill", "category": "resilience", "phase": ["task_failed", "task_completed"]},
-    {"text": "You promised yourself this. Don't break promises to the most important person in your life.", "attribution": "Stake", "category": "self_commitment", "phase": ["reminder_late"]},
-    {"text": "This discomfort is temporary. Regret is permanent.", "attribution": "Stake", "category": "urgency", "phase": ["reminder_late"]},
-    {"text": "Right now, someone you care about believes you can do this. Prove them right.", "attribution": "Stake", "category": "relatedness", "phase": ["reminder_mid", "reminder_late"]},
-    {"text": "You chose this. That means you already believe you can do it.", "attribution": "Stake", "category": "autonomy", "phase": ["task_created", "reminder_early"]},
-    {"text": "Every task you complete builds evidence that you're the person you want to be.", "attribution": "Stake (Identity-Based Habits, James Clear)", "category": "identity", "phase": ["task_completed"]}
+    {"text": "You promised yourself this. Don't break promises to the most important person in your life.", "attribution": "Nudge", "category": "self_commitment", "phase": ["reminder_late"]},
+    {"text": "This discomfort is temporary. Regret is permanent.", "attribution": "Nudge", "category": "urgency", "phase": ["reminder_late"]},
+    {"text": "Right now, someone you care about believes you can do this. Prove them right.", "attribution": "Nudge", "category": "relatedness", "phase": ["reminder_mid", "reminder_late"]},
+    {"text": "You chose this. That means you already believe you can do it.", "attribution": "Nudge", "category": "autonomy", "phase": ["task_created", "reminder_early"]},
+    {"text": "Every task you complete builds evidence that you're the person you want to be.", "attribution": "Nudge (Identity-Based Habits, James Clear)", "category": "identity", "phase": ["task_completed"]}
   ]
 }

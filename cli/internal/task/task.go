@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/neilsanghrajka/stake-ai/cli/internal/punishment"
-	"github.com/neilsanghrajka/stake-ai/cli/internal/store"
+	"github.com/neilsanghrajka/nudge/cli/internal/punishment"
+	"github.com/neilsanghrajka/nudge/cli/internal/store"
 )
 
 type Task struct {
@@ -152,7 +152,7 @@ func Complete(taskID string) (*Task, []punishment.SendResult, error) {
 	// Send all-clear
 	var results []punishment.SendResult
 	if t.PunishmentAction != "" && t.PunishmentAction != "desktop_notification" && len(t.Targets) > 0 {
-		msg := fmt.Sprintf("Task completed! '%s' — finished in time. No punishment today. -- Stake", t.Description)
+		msg := fmt.Sprintf("Task completed! '%s' — finished in time. No punishment today. -- Nudge", t.Description)
 		for _, target := range t.Targets {
 			ok, detail := punishment.Execute(t.PunishmentAction, target, msg)
 			results = append(results, punishment.SendResult{Target: target, OK: ok, Detail: detail})

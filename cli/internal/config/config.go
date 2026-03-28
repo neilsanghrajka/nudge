@@ -1,8 +1,8 @@
-// Package config manages stake configuration.
+// Package config manages nudge configuration.
 package config
 
 import (
-	"github.com/neilsanghrajka/stake-ai/cli/internal/store"
+	"github.com/neilsanghrajka/nudge/cli/internal/store"
 )
 
 type Config struct {

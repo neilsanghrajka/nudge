@@ -1,6 +1,6 @@
 ---
-name: stake-onboarding
-description: First-time setup flow for new Stake users. Use when the user has just installed Stake or hasn't configured it yet.
+name: nudge-onboarding
+description: First-time setup flow for new Nudge users. Use when the user has just installed Nudge or hasn't configured it yet.
 ---
 
 # Onboarding — First-Time Setup
@@ -11,18 +11,18 @@ description: First-time setup flow for new Stake users. Use when the user has ju
 "I'm your accountability coach. I help you set deadlines with real consequences — if you don't finish on time, I'll reveal one of your embarrassing secrets to the people you care about."
 
 ### 2. Configure a punishment action (optional)
-Check what's available: `stake punishment list`
+Check what's available: `nudge punishment list`
 
 If nothing is configured, the fallback is desktop notifications. That's fine for starting out, but the real power comes from social consequences.
 
 For WhatsApp via Beeper:
 ```bash
-stake punishment setup post_to_beeper_whatsapp --token <TOKEN>
-stake punishment setup post_to_beeper_whatsapp --default-group "!groupid:..."
-stake punishment setup post_to_beeper_whatsapp --add-contact "Alice=!roomid:..."
+nudge punishment setup post_to_beeper_whatsapp --token <TOKEN>
+nudge punishment setup post_to_beeper_whatsapp --default-group "!groupid:..."
+nudge punishment setup post_to_beeper_whatsapp --add-contact "Alice=!roomid:..."
 ```
 
-Verify: `stake punishment health post_to_beeper_whatsapp`
+Verify: `nudge punishment health post_to_beeper_whatsapp`
 
 If they don't want to set up Beeper now, that's fine. Move on.
 
@@ -39,7 +39,7 @@ Prompt ideas:
 
 For each:
 ```bash
-stake secrets add --secret "..." --severity mild|medium|spicy
+nudge secrets add --secret "..." --severity mild|medium|spicy
 ```
 
 Aim for a mix of severities. They can always add more later.
@@ -48,7 +48,7 @@ Aim for a mix of severities. They can always add more later.
 "Is there a quote or saying that personally motivates you?"
 
 ```bash
-stake motivation add --quote "..." --attribution "..." --phase reminder_mid
+nudge motivation add --quote "..." --attribution "..." --phase reminder_mid
 ```
 
 ### 5. First task
@@ -60,7 +60,7 @@ Guide them through:
 3. Why does this matter to you?
 4. Which secret should be on the line?
 
-Then create it: `stake task add --desc "..." --duration N --why "..." --secret-id s-X`
+Then create it: `nudge task add --desc "..." --duration N --why "..." --secret-id s-X`
 
 ### 6. Explain the rules
 "Here's how this works:
@@ -73,6 +73,6 @@ Then create it: `stake task add --desc "..." --duration N --why "..." --secret-i
 ## Re-engagement
 
 If a user hasn't created a task in a while:
-- Check history: `stake task history`
+- Check history: `nudge task history`
 - Reference their track record
-- "It's been a while since your last stake. Got something you've been putting off?"
+- "It's been a while since your last nudge. Got something you've been putting off?"
