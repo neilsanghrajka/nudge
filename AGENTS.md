@@ -24,9 +24,13 @@ Product-level skills that guide how agents should USE the nudge CLI (not build i
 ```
 nudge/
 ├── cli/                    # Go CLI source (builds to `nudge` binary)
+├── scripts/                # Release and build scripts
 ├── skills/                 # Product skills (nudge-cli/, nudge-coach/)
 ├── .agents/skills/         # Development skills (agent behavior when building nudge)
 ├── .claude/skills/         # Symlink → .agents/skills/
+├── .github/workflows/      # CI (release on tag push)
+├── .goreleaser.yaml        # Cross-platform build + Homebrew formula config
+├── install.sh              # curl-based installer
 ├── docs/                   # Documentation
 └── AGENTS.md               # This file
 ```
@@ -35,6 +39,37 @@ nudge/
 
 ```bash
 cd cli && go build -o nudge ./cmd/nudge/
+```
+
+## Releasing
+
+Releases are built with [GoReleaser](https://goreleaser.com/) — it cross-compiles for macOS/Linux (amd64 + arm64), uploads to GitHub Releases, and pushes a Homebrew formula to `neilsanghrajka/homebrew-tap`.
+
+```bash
+# Prerequisites (one-time)
+brew install goreleaser gh
+
+# Release a new version
+export TAP_GITHUB_TOKEN=ghp_...
+./scripts/release.sh v0.2.0
+
+# Redo a botched release
+./scripts/release.sh v0.2.0 --redo
+```
+
+Alternatively, pushing a `v*` tag triggers the same process via GitHub Actions (`.github/workflows/release.yml`).
+
+## Installing
+
+```bash
+# Homebrew
+brew install neilsanghrajka/tap/nudge
+
+# curl
+curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/install.sh | sh
+
+# Go
+go install github.com/neilsanghrajka/nudge/cli/cmd/nudge@latest
 ```
 
 ## CLI Design Principles
