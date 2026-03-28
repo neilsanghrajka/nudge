@@ -1,11 +1,36 @@
 ---
-name: nudge-onboarding
-description: First-time setup flow for new Nudge users. Use when the user has just installed Nudge or hasn't configured it yet.
+name: nudge-cli
+description: >-
+  How to use the nudge CLI — commands, flags, setup, and onboarding. Use this
+  skill whenever the user wants to create a task, add a secret, check status,
+  configure a punishment action, run any nudge command, or get started with
+  nudge for the first time. Also trigger when the user asks "how do I use
+  nudge", "what commands are available", needs exact flag syntax, or when
+  nudge config/secrets are empty and setup is needed.
 ---
 
-# Onboarding — First-Time Setup
+# Nudge CLI
 
-## Flow
+Nudge is a command-line accountability tool with real consequences. This skill covers how to operate it.
+
+For the full command reference with all flags, see `references/cli-reference.md`.
+
+## Quick Command Reference
+
+```bash
+nudge task add --desc "..." --duration 30 --why "..." --secret-id s-1
+nudge task complete <id>
+nudge task fail <id>
+nudge task status
+nudge task history --limit 5
+nudge secrets pick --severity spicy
+nudge punishment list
+nudge config show
+```
+
+All commands support `--json` for machine-readable output.
+
+## Onboarding — First-Time Setup
 
 ### 1. Welcome
 "I'm your accountability coach. I help you set deadlines with real consequences — if you don't finish on time, I'll reveal one of your embarrassing secrets to the people you care about."
@@ -27,7 +52,7 @@ Verify: `nudge punishment health post_to_beeper_whatsapp`
 If they don't want to set up Beeper now, that's fine. Move on.
 
 ### 3. Seed the secrets bank
-This is the fun part. Ask the user to share 3-5 embarrassing secrets.
+Ask the user to share 3-5 embarrassing secrets. This is the fun part.
 
 "What's something you'd be mortified if your friends found out? Don't worry, I'll only reveal it if you fail."
 
@@ -35,14 +60,13 @@ Prompt ideas:
 - "What's the most embarrassing thing you've done recently?"
 - "What's a guilty pleasure you'd never admit to?"
 - "What's something weird you do when nobody's watching?"
-- "What's a secret you've never told anyone?"
 
 For each:
 ```bash
 nudge secrets add --secret "..." --severity mild|medium|spicy
 ```
 
-Aim for a mix of severities. They can always add more later.
+Aim for a mix of severities.
 
 ### 4. (Optional) Add custom motivational quotes
 "Is there a quote or saying that personally motivates you?"
@@ -63,12 +87,11 @@ Guide them through:
 Then create it: `nudge task add --desc "..." --duration N --why "..." --secret-id s-X`
 
 ### 6. Explain the rules
-"Here's how this works:
-- I'll send you reminders as the deadline approaches
-- When time's up, if you haven't shown me proof that you're done, the punishment fires automatically
-- You can't reduce the punishment or cancel without a real reason
+- Reminders come as the deadline approaches
+- When time's up, if there's no proof of completion, the punishment fires automatically
+- No reducing the punishment or cancelling without a real reason
 - Partial credit doesn't exist — it's done or it's not
-- Show me real proof: a screenshot, a link, a diff — not just 'I'm done'"
+- Real proof required: a screenshot, a link, a diff — not just "I'm done"
 
 ## Re-engagement
 

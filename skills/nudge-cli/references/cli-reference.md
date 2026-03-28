@@ -1,11 +1,6 @@
----
-name: nudge-cli-usage
-description: Reference for all nudge CLI commands. Use when creating tasks, managing secrets, configuring punishments, or checking status.
----
+# Nudge CLI Reference
 
-# Nudge CLI Usage
-
-Nudge is a command-line tool for accountability with real consequences. All commands support `--json` for machine-readable output.
+All commands support `--json` for machine-readable output.
 
 ## Task Commands
 

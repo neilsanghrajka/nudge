@@ -12,22 +12,19 @@ Agent skills live in `.agents/skills/` and are symlinked to `.claude/skills/` fo
 
 ## Product Skills
 
-Product-level skills that guide how agents should USE the nudge CLI (not build it) live in `skills/`:
+Product-level skills that guide how agents should USE the nudge CLI (not build it) live in `skills/<skill-name>/SKILL.md`:
 
 | Skill | Purpose |
 |-------|---------|
-| `cli-usage` | Reference for all `nudge` CLI commands |
-| `coaching` | Psychology-backed motivation strategy (SDT, loss aversion, identity) |
-| `verification` | How to verify task completion — what counts as proof, red flags |
-| `strictness` | How to handle avoidance — common cheats, when to push back |
-| `onboarding` | First-time setup flow for new users |
+| `nudge-cli` | CLI commands, flags, onboarding, and first-time setup |
+| `nudge-coach` | Coaching psychology, messaging, verification, and strictness |
 
 ## Repository Structure
 
 ```
 nudge/
 ├── cli/                    # Go CLI source (builds to `nudge` binary)
-├── skills/                 # Product skills (agent behavior when using nudge)
+├── skills/                 # Product skills (nudge-cli/, nudge-coach/)
 ├── .agents/skills/         # Development skills (agent behavior when building nudge)
 ├── .claude/skills/         # Symlink → .agents/skills/
 ├── docs/                   # Documentation
