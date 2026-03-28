@@ -1,8 +1,8 @@
 {
-  "name": "accountability-coach",
+  "name": "@stake-ai/openclaw-plugin",
   "version": "1.0.0",
   "type": "module",
-  "description": "Set deadlines with real social consequences. Configurable punishments, secrets bank, and psychology-backed motivation.",
+  "description": "OpenClaw plugin for Stake — accountability with real consequences.",
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -18,7 +18,7 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
+    "@types/node": "^22.0.0",
     "typescript": "^5.4"
   }
 }

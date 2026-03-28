@@ -1,0 +1,26 @@
+{
+  "quotes": [
+    {"text": "The pain of discipline is far less than the pain of regret.", "attribution": "Unknown", "category": "discipline", "phase": ["reminder_early", "reminder_mid"]},
+    {"text": "You don't have to be great to start, but you have to start to be great.", "attribution": "Zig Ziglar", "category": "starting", "phase": ["task_created"]},
+    {"text": "We are what we repeatedly do. Excellence is not an act, but a habit.", "attribution": "Will Durant", "category": "habits", "phase": ["task_created", "task_completed"]},
+    {"text": "The best time to plant a tree was 20 years ago. The second best time is now.", "attribution": "Chinese Proverb", "category": "starting", "phase": ["task_created", "reminder_early"]},
+    {"text": "People do not decide their futures. They decide their habits, and their habits decide their futures.", "attribution": "F.M. Alexander", "category": "habits", "phase": ["reminder_early", "reminder_mid"]},
+    {"text": "Motivation gets you started. Commitment keeps you going.", "attribution": "Jim Rohn", "category": "persistence", "phase": ["reminder_mid"]},
+    {"text": "You will never always be motivated. You have to learn to be disciplined.", "attribution": "Unknown", "category": "discipline", "phase": ["reminder_mid", "reminder_late"]},
+    {"text": "A year from now you will wish you had started today.", "attribution": "Karen Lamb", "category": "urgency", "phase": ["reminder_late"]},
+    {"text": "Done is better than perfect.", "attribution": "Sheryl Sandberg", "category": "action", "phase": ["reminder_mid", "reminder_late"]},
+    {"text": "If it's important to you, you'll find a way. If not, you'll find an excuse.", "attribution": "Jim Rohn", "category": "commitment", "phase": ["reminder_mid", "reminder_late"]},
+    {"text": "Your future self is watching you right now through memories.", "attribution": "Aubrey de Grey", "category": "perspective", "phase": ["reminder_late"]},
+    {"text": "Accountability breeds response-ability.", "attribution": "Stephen Covey", "category": "accountability", "phase": ["task_created", "reminder_early"]},
+    {"text": "It does not matter how slowly you go as long as you do not stop.", "attribution": "Confucius", "category": "persistence", "phase": ["reminder_mid"]},
+    {"text": "Fall seven times, stand up eight.", "attribution": "Japanese Proverb", "category": "resilience", "phase": ["task_failed"]},
+    {"text": "Failure is not the opposite of success; it's part of success.", "attribution": "Arianna Huffington", "category": "resilience", "phase": ["task_failed"]},
+    {"text": "The comeback is always stronger than the setback.", "attribution": "Unknown", "category": "resilience", "phase": ["task_failed"]},
+    {"text": "Success is not final, failure is not fatal: it is the courage to continue that counts.", "attribution": "Winston Churchill", "category": "resilience", "phase": ["task_failed", "task_completed"]},
+    {"text": "You promised yourself this. Don't break promises to the most important person in your life.", "attribution": "Stake", "category": "self_commitment", "phase": ["reminder_late"]},
+    {"text": "This discomfort is temporary. Regret is permanent.", "attribution": "Stake", "category": "urgency", "phase": ["reminder_late"]},
+    {"text": "Right now, someone you care about believes you can do this. Prove them right.", "attribution": "Stake", "category": "relatedness", "phase": ["reminder_mid", "reminder_late"]},
+    {"text": "You chose this. That means you already believe you can do it.", "attribution": "Stake", "category": "autonomy", "phase": ["task_created", "reminder_early"]},
+    {"text": "Every task you complete builds evidence that you're the person you want to be.", "attribution": "Stake (Identity-Based Habits, James Clear)", "category": "identity", "phase": ["task_completed"]}
+  ]
+}
