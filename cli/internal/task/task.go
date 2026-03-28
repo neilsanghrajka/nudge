@@ -3,9 +3,11 @@ package task
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/neilsanghrajka/nudge/cli/internal/punishment"
+	"github.com/neilsanghrajka/nudge/cli/internal/secrets"
 	"github.com/neilsanghrajka/nudge/cli/internal/store"
 )
 
@@ -35,6 +37,12 @@ type WarningInterval struct {
 	MinutesRemaining int    `json:"minutes_remaining"`
 	Phase            string `json:"phase"`
 	Fired            bool   `json:"fired"`
+}
+
+type CronJob struct {
+	Name    string `json:"name"`
+	At      string `json:"at"`
+	Command string `json:"command"`
 }
 
 type TaskStore struct {
@@ -104,6 +112,46 @@ func CalculateWarnings(durationMinutes int) []WarningInterval {
 	return warnings
 }
 
+// CronJobsForTask returns the one-shot cron jobs needed to drive task warnings and failure checks.
+func CronJobsForTask(t *Task) []CronJob {
+	created, err := time.Parse(time.RFC3339, t.CreatedAt)
+	if err != nil {
+		return nil
+	}
+
+	deadline, err := time.Parse(time.RFC3339, t.Deadline)
+	if err != nil {
+		return nil
+	}
+
+	jobs := make([]CronJob, 0, len(t.WarningIntervals)+1)
+	for _, warning := range t.WarningIntervals {
+		jobs = append(jobs, CronJob{
+			Name:    cronJobName(t.ID, warningCronSuffix(warning.Name)),
+			At:      created.Add(time.Duration(warning.MinutesFromStart) * time.Minute).Format(time.RFC3339),
+			Command: "nudge task check",
+		})
+	}
+
+	jobs = append(jobs, CronJob{
+		Name:    cronJobName(t.ID, "punish"),
+		At:      deadline.Format(time.RFC3339),
+		Command: "nudge task check",
+	})
+
+	return jobs
+}
+
+// CancelCronNames returns all cron job names associated with a task lifecycle.
+func CancelCronNames(t *Task) []string {
+	jobs := CronJobsForTask(t)
+	names := make([]string, 0, len(jobs))
+	for _, job := range jobs {
+		names = append(names, job.Name)
+	}
+	return names
+}
+
 // Add creates a new task and saves it.
 func Add(desc string, durationMin int, why string, punishAction string, targets []string, punishMsg string) (*Task, error) {
 	ts := LoadTasks()
@@ -163,10 +211,7 @@ func Complete(taskID string, proof string) (*Task, []punishment.SendResult, erro
 			msg += fmt.Sprintf(" — Verified: %s", proof)
 		}
 		msg += " -- Nudge"
-		for _, target := range t.Targets {
-			ok, detail := punishment.Execute(t.PunishmentAction, target, msg)
-			results = append(results, punishment.SendResult{Target: target, OK: ok, Detail: detail})
-		}
+		results, _, _ = executePunishment(t, msg)
 	}
 	punishment.DesktopNotify(fmt.Sprintf("PASSED: %s", t.Description))
 
@@ -188,10 +233,14 @@ func Fail(taskID string, reason string) (*Task, []punishment.SendResult, error) 
 	ts := LoadTasks()
 	t, ok := ts.Active[taskID]
 	if !ok {
+		h := LoadHistory()
+		for _, failed := range h.Failed {
+			if failed.ID == taskID {
+				return failed, nil, nil
+			}
+		}
 		return nil, nil, fmt.Errorf("no active task '%s'", taskID)
 	}
-
-	t.FailReason = reason
 
 	punishMsg := t.PunishmentMessage
 	if punishMsg == "" {
@@ -201,26 +250,14 @@ func Fail(taskID string, reason string) (*Task, []punishment.SendResult, error) 
 		punishMsg += fmt.Sprintf(" — Verified: %s", reason)
 	}
 
-	var results []punishment.SendResult
-	if len(t.Targets) > 0 {
-		for _, target := range t.Targets {
-			ok, detail := punishment.Execute(t.PunishmentAction, target, punishMsg)
-			results = append(results, punishment.SendResult{Target: target, OK: ok, Detail: detail})
-		}
-	} else {
-		ok, detail := punishment.Execute("desktop_notification", "", punishMsg)
-		results = append(results, punishment.SendResult{Target: "local", OK: ok, Detail: detail})
-	}
-
-	t.Status = "failed"
-	t.FailedAt = time.Now().UTC().Format(time.RFC3339)
-
 	h := LoadHistory()
-	h.Failed = append(h.Failed, t)
-	SaveHistory(h)
-
-	delete(ts.Active, taskID)
-	SaveTasks(ts)
+	results, _, _ := failLoadedTask(ts, h, t, reason, punishMsg, time.Now().UTC())
+	if err := SaveHistory(h); err != nil {
+		return nil, nil, err
+	}
+	if err := SaveTasks(ts); err != nil {
+		return nil, nil, err
+	}
 
 	return t, results, nil
 }
@@ -230,6 +267,12 @@ func Cancel(taskID string) (*Task, error) {
 	ts := LoadTasks()
 	t, ok := ts.Active[taskID]
 	if !ok {
+		h := LoadHistory()
+		for _, cancelled := range h.Cancelled {
+			if cancelled.ID == taskID {
+				return cancelled, nil
+			}
+		}
 		return nil, fmt.Errorf("no active task '%s'", taskID)
 	}
 
@@ -259,6 +302,7 @@ type CheckResult struct {
 // Check inspects all active tasks, fires overdue warnings and auto-fails past-deadline tasks.
 func Check() ([]CheckResult, error) {
 	ts := LoadTasks()
+	h := LoadHistory()
 	now := time.Now().UTC()
 	var results []CheckResult
 
@@ -280,9 +324,9 @@ func Check() ([]CheckResult, error) {
 				continue
 			}
 			warningTime := created.Add(time.Duration(w.MinutesFromStart) * time.Minute)
-			if now.After(warningTime) {
+			if !now.Before(warningTime) {
 				// Fire this warning
-				remaining := int(time.Until(deadline).Minutes())
+				remaining := int(deadline.Sub(now).Minutes())
 				if remaining < 0 {
 					remaining = 0
 				}
@@ -302,40 +346,14 @@ func Check() ([]CheckResult, error) {
 		}
 
 		// Check deadline
-		if now.After(deadline) {
-			// Auto-fail: execute punishment directly
+		if !now.Before(deadline) {
 			punishMsg := t.PunishmentMessage
 			if punishMsg == "" {
 				punishMsg = fmt.Sprintf("☠️ TIME'S UP! Failed to complete: %s", t.Description)
 			}
 			punishMsg += " — auto-failed by nudge"
 
-			var punishOK bool
-			var punishErr string
-			if len(t.Targets) > 0 {
-				for _, target := range t.Targets {
-					ok, detail := punishment.Execute(t.PunishmentAction, target, punishMsg)
-					if !ok {
-						punishErr = detail
-					}
-					punishOK = punishOK || ok
-				}
-			} else {
-				ok, detail := punishment.Execute("desktop_notification", "", punishMsg)
-				punishOK = ok
-				if !ok {
-					punishErr = detail
-				}
-			}
-
-			t.Status = "failed"
-			t.FailReason = "deadline passed (auto-check)"
-			t.FailedAt = now.Format(time.RFC3339)
-
-			h := LoadHistory()
-			h.Failed = append(h.Failed, t)
-			SaveHistory(h)
-			delete(ts.Active, t.ID)
+			_, punishOK, punishErr := failLoadedTask(ts, h, t, "deadline passed (auto-check)", punishMsg, now)
 
 			results = append(results, CheckResult{
 				TaskID:          t.ID,
@@ -347,11 +365,74 @@ func Check() ([]CheckResult, error) {
 		}
 	}
 
+	if err := SaveHistory(h); err != nil {
+		return results, err
+	}
+
 	// Save updated warning states (and removed tasks)
 	if err := SaveTasks(ts); err != nil {
 		return results, err
 	}
 	return results, nil
+}
+
+func executePunishment(t *Task, message string) ([]punishment.SendResult, bool, string) {
+	var results []punishment.SendResult
+	var punishOK bool
+	var punishErr string
+
+	if len(t.Targets) > 0 {
+		for _, target := range t.Targets {
+			ok, detail := punishment.Execute(t.PunishmentAction, target, message)
+			results = append(results, punishment.SendResult{Target: target, OK: ok, Detail: detail})
+			if !ok {
+				punishErr = detail
+			}
+			punishOK = punishOK || ok
+		}
+		return results, punishOK, punishErr
+	}
+
+	ok, detail := punishment.Execute("desktop_notification", "", message)
+	results = append(results, punishment.SendResult{Target: "local", OK: ok, Detail: detail})
+	if !ok {
+		punishErr = detail
+	}
+	return results, ok, punishErr
+}
+
+func failLoadedTask(ts *TaskStore, h *History, t *Task, reason string, punishMsg string, failedAt time.Time) ([]punishment.SendResult, bool, string) {
+	t.FailReason = reason
+	results, punishOK, punishErr := executePunishment(t, punishMsg)
+	t.Status = "failed"
+	t.FailedAt = failedAt.UTC().Format(time.RFC3339)
+	h.Failed = append(h.Failed, t)
+	delete(ts.Active, t.ID)
+	if t.SecretID != "" {
+		secrets.MarkRevealed(t.SecretID)
+	}
+	return results, punishOK, punishErr
+}
+
+func cronJobName(taskID, suffix string) string {
+	cleanTaskID := strings.ReplaceAll(taskID, "-", "")
+	return fmt.Sprintf("nudge-%s-%s", cleanTaskID, suffix)
+}
+
+func warningCronSuffix(warningName string) string {
+	switch warningName {
+	case "halfway":
+		return "warn-half"
+	case "75_percent":
+		return "warn-75"
+	case "10_min_left":
+		return "warn-10m"
+	case "5_min_left":
+		return "warn-5m"
+	default:
+		cleanWarningName := strings.ReplaceAll(warningName, "_", "-")
+		return "warn-" + cleanWarningName
+	}
 }
 
 // Status returns active tasks with remaining time.

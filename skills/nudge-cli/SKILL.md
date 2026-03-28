@@ -43,6 +43,7 @@ nudge version
 nudge task add --desc "..." --duration 30 --why "..." --secret-id s-1
 nudge task complete <id> --proof "how completion was verified"
 nudge task fail <id> --reason "how failure was verified"
+nudge task add --json                  # returns task + exact one-shot cron schedule
 nudge task status
 nudge task check                       # fire overdue warnings & auto-fail past deadlines
 nudge task daemon --interval 30        # background loop, checks every 30s
@@ -54,6 +55,13 @@ nudge config show
 ```
 
 All commands support `--json` for machine-readable output.
+
+For task automation, prefer the cron pattern over the daemon:
+- Run `nudge task add --json`
+- Parse the response's `data.crons` array
+- Create one openclaw cron per entry with `--at` and `--delete-after-run`
+- Each cron runs the same local command: `nudge task check`
+- After `nudge task complete --json`, `nudge task cancel --json`, or `nudge task fail --json`, parse `data.cancel_crons` and remove those openclaw jobs
 
 ## Onboarding — First-Time Setup
 
@@ -111,22 +119,20 @@ Guide them through:
 
 Then create it: `nudge task add --desc "..." --duration N --why "..." --secret-id s-X`
 
-### 6. Start the daemon
-The daemon watches active tasks and auto-fires warnings and punishments:
-```bash
-nudge task daemon --interval 30
-```
+### 6. Schedule execution
+Preferred: after creating a task with `nudge task add --json`, parse the returned `data.crons` array and create one-shot openclaw jobs. Each job should use the provided `name` and `at`, run `nudge task check`, and set `--delete-after-run`.
 
-Or set up a cron/launchd to run `nudge task check` periodically.
+Use `nudge task daemon --interval 30` only as a convenience for short sprints or local foreground use.
 
 ### 7. Explain the rules
-- Reminders come as the deadline approaches (fired automatically by `nudge task check` / `nudge task daemon`)
+- Reminders come as the deadline approaches (fired automatically by scheduled `nudge task check` runs, or by `nudge task daemon` for short sprints)
 - When time's up, if there's no proof of completion, the punishment fires automatically
 - No reducing the punishment or cancelling without a real reason
 - Partial credit doesn't exist — it's done or it's not
 - Real proof required: a screenshot, a link, a diff — not just "I'm done"
 - Always use `--proof` when completing to describe how it was verified (e.g., Strava data, PR link, screenshot)
 - Always use `--reason` when failing to describe how failure was verified
+- After `complete`, `cancel`, or `fail`, use the returned `data.cancel_crons` list to remove any outstanding openclaw jobs for that task
 
 ## Re-engagement
 
