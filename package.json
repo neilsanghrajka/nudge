@@ -1,0 +1,24 @@
+{
+  "name": "accountability-coach",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Set deadlines with real social consequences. Configurable punishments, secrets bank, and psychology-backed motivation.",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "openclaw": {
+    "extensions": {
+      "tools": true,
+      "cron": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.4"
+  }
+}
