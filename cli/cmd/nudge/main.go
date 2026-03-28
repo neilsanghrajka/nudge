@@ -15,7 +15,10 @@ import (
 	"github.com/neilsanghrajka/nudge/cli/internal/task"
 )
 
-var jsonMode bool
+var (
+	jsonMode bool
+	version  = "dev"
+)
 
 func main() {
 	args := os.Args[1:]
@@ -61,6 +64,8 @@ func main() {
 		handleConfig(rest)
 	case "cleanup":
 		handleCleanup(rest)
+	case "version", "--version", "-v":
+		fmt.Println("nudge " + version)
 	case "help", "--help", "-h":
 		printUsage()
 	default:

@@ -1,0 +1,49 @@
+version: 2
+
+project_name: nudge
+
+builds:
+  - id: nudge
+    dir: cli
+    main: ./cmd/nudge
+    binary: nudge
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+brews:
+  - name: nudge
+    repository:
+      owner: neilsanghrajka
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/neilsanghrajka/nudge"
+    description: "Accountability CLI with real consequences — set deadlines, add secrets, face punishments"
+    license: "MIT"
+    install: |
+      bin.install "nudge"
+    test: |
+      system "#{bin}/nudge", "version"
