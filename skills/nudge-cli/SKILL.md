@@ -11,9 +11,31 @@ description: >-
 
 # Nudge CLI
 
-Nudge is a command-line accountability tool with real consequences. This skill covers how to operate it.
+Nudge is a command-line accountability tool with real consequences. This skill covers how to install and operate it.
 
 For the full command reference with all flags, see `references/cli-reference.md`.
+
+## Installation
+
+### Homebrew (macOS and Linux)
+```bash
+brew install neilsanghrajka/tap/nudge
+```
+
+### Shell script (macOS and Linux)
+```bash
+curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/install.sh | sh
+```
+
+### Go install (requires Go toolchain)
+```bash
+go install github.com/neilsanghrajka/nudge/cli/cmd/nudge@latest
+```
+
+### Verify
+```bash
+nudge version
+```
 
 ## Quick Command Reference
 
