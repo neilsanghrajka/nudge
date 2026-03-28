@@ -44,8 +44,11 @@ nudge task add --desc "..." --duration 30 --why "..." --secret-id s-1
 nudge task complete <id> --proof "how completion was verified"
 nudge task fail <id> --reason "how failure was verified"
 nudge task status
+nudge task check                       # fire overdue warnings & auto-fail past deadlines
+nudge task daemon --interval 30        # background loop, checks every 30s
 nudge task history --limit 5
 nudge secrets pick --severity spicy
+nudge secrets pick --unused            # only unrevealed secrets
 nudge punishment list
 nudge config show
 ```
@@ -108,8 +111,16 @@ Guide them through:
 
 Then create it: `nudge task add --desc "..." --duration N --why "..." --secret-id s-X`
 
-### 6. Explain the rules
-- Reminders come as the deadline approaches
+### 6. Start the daemon
+The daemon watches active tasks and auto-fires warnings and punishments:
+```bash
+nudge task daemon --interval 30
+```
+
+Or set up a cron/launchd to run `nudge task check` periodically.
+
+### 7. Explain the rules
+- Reminders come as the deadline approaches (fired automatically by `nudge task check` / `nudge task daemon`)
 - When time's up, if there's no proof of completion, the punishment fires automatically
 - No reducing the punishment or cancelling without a real reason
 - Partial credit doesn't exist — it's done or it's not

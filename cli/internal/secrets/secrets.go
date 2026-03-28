@@ -15,6 +15,7 @@ type Secret struct {
 	Severity  string `json:"severity"`
 	AddedAt   string `json:"added_at"`
 	TimesUsed int    `json:"times_used"`
+	Revealed  bool   `json:"revealed"`
 }
 
 type SecretsStore struct {
@@ -58,8 +59,8 @@ func Add(secret, severity string) (*Secret, error) {
 	return entry, nil
 }
 
-// Pick selects a secret, preferring least-used. Optionally filter by severity.
-func Pick(severity string) (*Secret, error) {
+// Pick selects a secret, preferring unrevealed and least-used. Optionally filter by severity and unused-only.
+func Pick(severity string, unusedOnly bool) (*Secret, error) {
 	ss := Load()
 	candidates := ss.Secrets
 
@@ -73,8 +74,32 @@ func Pick(severity string) (*Secret, error) {
 		candidates = filtered
 	}
 
+	if unusedOnly {
+		var filtered []*Secret
+		for _, s := range candidates {
+			if !s.Revealed {
+				filtered = append(filtered, s)
+			}
+		}
+		if len(filtered) == 0 {
+			return nil, fmt.Errorf("no unused (unrevealed) secrets. Add more: nudge secrets add --secret '...'")
+		}
+		candidates = filtered
+	}
+
 	if len(candidates) == 0 {
 		return nil, fmt.Errorf("no matching secrets. Add some first: nudge secrets add --secret '...'")
+	}
+
+	// Prefer unrevealed secrets first
+	var unrevealed []*Secret
+	for _, s := range candidates {
+		if !s.Revealed {
+			unrevealed = append(unrevealed, s)
+		}
+	}
+	if len(unrevealed) > 0 {
+		candidates = unrevealed
 	}
 
 	// Find minimum times_used
@@ -95,6 +120,18 @@ func Pick(severity string) (*Secret, error) {
 
 	picked := leastUsed[rand.Intn(len(leastUsed))]
 	return picked, nil
+}
+
+// MarkRevealed marks a secret as revealed (punishment was sent).
+func MarkRevealed(secretID string) {
+	ss := Load()
+	for _, s := range ss.Secrets {
+		if s.ID == secretID {
+			s.Revealed = true
+			Save(ss)
+			return
+		}
+	}
 }
 
 // MarkUsed increments the usage counter for a secret.

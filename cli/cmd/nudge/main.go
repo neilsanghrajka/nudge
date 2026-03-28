@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/neilsanghrajka/nudge/cli/internal/config"
 	"github.com/neilsanghrajka/nudge/cli/internal/motivation"
@@ -96,6 +99,10 @@ func handleTask(args []string) {
 		taskList(args[1:])
 	case "history":
 		taskHistory(args[1:])
+	case "check":
+		taskCheck()
+	case "daemon":
+		taskDaemon(args[1:])
 	case "help", "--help", "-h":
 		printTaskHelp()
 	default:
@@ -161,11 +168,22 @@ func taskAdd(args []string) {
 			exitErr("task add", fmt.Sprintf("secret '%s' not found", secretID), "SECRET_NOT_FOUND")
 			return
 		}
+		if s.Revealed && !jsonMode {
+			fmt.Fprintf(os.Stderr, "  [warn] Secret '%s' has already been revealed in a previous punishment. Consider using an unused secret.\n", secretID)
+		}
 		punishMsg = s.Secret
 		secrets.MarkUsed(secretID)
 	}
 
 	t, err := task.Add(desc, duration, why, punishAction, targetList, punishMsg)
+	if err == nil && secretID != "" {
+		// Store secret ID on task for marking revealed on fail
+		ts := task.LoadTasks()
+		if active, ok := ts.Active[t.ID]; ok {
+			active.SecretID = secretID
+			task.SaveTasks(ts)
+		}
+	}
 	if err != nil {
 		exitErr("task add", err.Error(), "ADD_FAILED")
 		return
@@ -225,10 +243,21 @@ func taskFail(args []string) {
 			reason = args[i]
 		}
 	}
+	// Look up secret ID before fail moves task to history
+	ts := task.LoadTasks()
+	var failSecretID string
+	if active, ok := ts.Active[taskID]; ok {
+		failSecretID = active.SecretID
+	}
+
 	t, results, err := task.Fail(taskID, reason)
 	if err != nil {
 		exitErr("task fail", err.Error(), "FAIL_FAILED")
 		return
+	}
+	// Mark secret as revealed since punishment was sent
+	if failSecretID != "" {
+		secrets.MarkRevealed(failSecretID)
 	}
 	outputOK("task fail", map[string]any{"task": t, "messages_sent": results})
 	if !jsonMode {
@@ -343,6 +372,114 @@ func taskHistory(args []string) {
 	}
 }
 
+func taskCheck() {
+	results, err := task.Check()
+	if err != nil {
+		exitErr("task check", err.Error(), "CHECK_FAILED")
+		return
+	}
+
+	// Mark secrets revealed for auto-failed tasks
+	for _, r := range results {
+		if r.Action == "deadline_failed" {
+			// Look up the task in history to find secret_id
+			h := task.LoadHistory()
+			for _, t := range h.Failed {
+				if t.ID == r.TaskID && t.SecretID != "" {
+					secrets.MarkRevealed(t.SecretID)
+				}
+			}
+		}
+	}
+
+	outputOK("task check", map[string]any{"results": results, "count": len(results)})
+	if !jsonMode {
+		if len(results) == 0 {
+			fmt.Println("All tasks OK. Nothing to fire.")
+			return
+		}
+		for _, r := range results {
+			switch r.Action {
+			case "warning_fired":
+				fmt.Printf("  ⏰ %s: fired warnings %s\n", r.TaskID, strings.Join(r.WarningsFired, ", "))
+			case "deadline_failed":
+				status := "sent"
+				if !r.PunishmentSent {
+					status = "FAILED: " + r.PunishmentError
+				}
+				fmt.Printf("  ☠️  %s: deadline passed, punishment %s\n", r.TaskID, status)
+			}
+		}
+	}
+}
+
+func taskDaemon(args []string) {
+	interval := 30
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--interval" && i+1 < len(args) {
+			interval, _ = strconv.Atoi(args[i+1])
+		}
+	}
+	if interval < 5 {
+		interval = 5
+	}
+
+	if !jsonMode {
+		fmt.Printf("Nudge daemon started. Checking every %ds. Press Ctrl+C to stop.\n", interval)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+	ticker := time.NewTicker(time.Duration(interval) * time.Second)
+	defer ticker.Stop()
+
+	// Run immediately on start
+	runCheck := func() {
+		results, err := task.Check()
+		if err != nil && !jsonMode {
+			fmt.Fprintf(os.Stderr, "  check error: %v\n", err)
+			return
+		}
+		for _, r := range results {
+			if r.Action == "deadline_failed" {
+				h := task.LoadHistory()
+				for _, t := range h.Failed {
+					if t.ID == r.TaskID && t.SecretID != "" {
+						secrets.MarkRevealed(t.SecretID)
+					}
+				}
+			}
+		}
+		if jsonMode && len(results) > 0 {
+			b, _ := json.Marshal(map[string]any{"event": "check", "results": results})
+			fmt.Println(string(b))
+		} else if !jsonMode {
+			for _, r := range results {
+				switch r.Action {
+				case "warning_fired":
+					fmt.Printf("  ⏰ %s: %s\n", r.TaskID, strings.Join(r.WarningsFired, ", "))
+				case "deadline_failed":
+					fmt.Printf("  ☠️  %s: auto-failed\n", r.TaskID)
+				}
+			}
+		}
+	}
+
+	runCheck()
+	for {
+		select {
+		case <-ticker.C:
+			runCheck()
+		case <-sig:
+			if !jsonMode {
+				fmt.Println("\nDaemon stopped.")
+			}
+			return
+		}
+	}
+}
+
 // ─── Secrets ───
 
 func handleSecrets(args []string) {
@@ -397,19 +534,27 @@ func secretsList() {
 			return
 		}
 		for _, s := range ss.Secrets {
-			fmt.Printf("  %s [%s] (used %dx): %s\n", s.ID, s.Severity, s.TimesUsed, s.Secret)
+			revealed := ""
+			if s.Revealed {
+				revealed = " [REVEALED]"
+			}
+			fmt.Printf("  %s [%s] (used %dx)%s: %s\n", s.ID, s.Severity, s.TimesUsed, revealed, s.Secret)
 		}
 	}
 }
 
 func secretsPick(args []string) {
 	var severity string
+	unusedOnly := false
 	for i := 0; i < len(args); i++ {
 		if args[i] == "--severity" && i+1 < len(args) {
 			severity = args[i+1]
 		}
+		if args[i] == "--unused" {
+			unusedOnly = true
+		}
 	}
-	s, err := secrets.Pick(severity)
+	s, err := secrets.Pick(severity, unusedOnly)
 	if err != nil {
 		exitErr("secrets pick", err.Error(), "PICK_FAILED")
 		return
@@ -706,6 +851,8 @@ Actions:
   status    Show active tasks with time remaining
   list      List tasks (--all for history)
   history   Show task history (--limit N)
+  check     Check all tasks: fire overdue warnings & auto-fail past deadlines
+  daemon    Run in background, checking every 30s (--interval N)
 
 Examples:
   nudge task add --desc "Ship feature" --duration 60 --why "Demo tomorrow" --secret-id s-1
@@ -713,6 +860,8 @@ Examples:
   nudge task complete task-1 --proof "Strava: 18 min walk recorded at 4:45 PM"
   nudge task fail task-1 --reason "no slides submitted before deadline"
   nudge task status
+  nudge task check
+  nudge task daemon --interval 30
   nudge task list --all
   nudge task history --limit 5
 `)

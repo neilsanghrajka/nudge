@@ -26,13 +26,15 @@ type Task struct {
 	CancelledAt       string            `json:"cancelled_at,omitempty"`
 	Proof             string            `json:"proof,omitempty"`
 	FailReason        string            `json:"fail_reason,omitempty"`
+	SecretID          string            `json:"secret_id,omitempty"`
 }
 
 type WarningInterval struct {
-	Name               string `json:"name"`
-	MinutesFromStart   int    `json:"minutes_from_start"`
-	MinutesRemaining   int    `json:"minutes_remaining"`
-	Phase              string `json:"phase"`
+	Name             string `json:"name"`
+	MinutesFromStart int    `json:"minutes_from_start"`
+	MinutesRemaining int    `json:"minutes_remaining"`
+	Phase            string `json:"phase"`
+	Fired            bool   `json:"fired"`
 }
 
 type TaskStore struct {
@@ -242,6 +244,114 @@ func Cancel(taskID string) (*Task, error) {
 	SaveTasks(ts)
 
 	return t, nil
+}
+
+// CheckResult captures what happened during a check cycle.
+type CheckResult struct {
+	TaskID          string   `json:"task_id"`
+	Description     string   `json:"description"`
+	Action          string   `json:"action"` // "warning_fired", "deadline_failed"
+	WarningsFired   []string `json:"warnings_fired,omitempty"`
+	PunishmentSent  bool     `json:"punishment_sent,omitempty"`
+	PunishmentError string   `json:"punishment_error,omitempty"`
+}
+
+// Check inspects all active tasks, fires overdue warnings and auto-fails past-deadline tasks.
+func Check() ([]CheckResult, error) {
+	ts := LoadTasks()
+	now := time.Now().UTC()
+	var results []CheckResult
+
+	for _, t := range ts.Active {
+		created, err := time.Parse(time.RFC3339, t.CreatedAt)
+		if err != nil {
+			continue
+		}
+		deadline, err := time.Parse(time.RFC3339, t.Deadline)
+		if err != nil {
+			continue
+		}
+
+		// Check warnings
+		var firedNames []string
+		for i := range t.WarningIntervals {
+			w := &t.WarningIntervals[i]
+			if w.Fired {
+				continue
+			}
+			warningTime := created.Add(time.Duration(w.MinutesFromStart) * time.Minute)
+			if now.After(warningTime) {
+				// Fire this warning
+				remaining := int(time.Until(deadline).Minutes())
+				if remaining < 0 {
+					remaining = 0
+				}
+				msg := fmt.Sprintf("⏰ %s — %d min left. %s", t.Description, remaining, t.Why)
+				punishment.DesktopNotify(msg)
+				w.Fired = true
+				firedNames = append(firedNames, w.Name)
+			}
+		}
+		if len(firedNames) > 0 {
+			results = append(results, CheckResult{
+				TaskID:        t.ID,
+				Description:   t.Description,
+				Action:        "warning_fired",
+				WarningsFired: firedNames,
+			})
+		}
+
+		// Check deadline
+		if now.After(deadline) {
+			// Auto-fail: execute punishment directly
+			punishMsg := t.PunishmentMessage
+			if punishMsg == "" {
+				punishMsg = fmt.Sprintf("☠️ TIME'S UP! Failed to complete: %s", t.Description)
+			}
+			punishMsg += " — auto-failed by nudge"
+
+			var punishOK bool
+			var punishErr string
+			if len(t.Targets) > 0 {
+				for _, target := range t.Targets {
+					ok, detail := punishment.Execute(t.PunishmentAction, target, punishMsg)
+					if !ok {
+						punishErr = detail
+					}
+					punishOK = punishOK || ok
+				}
+			} else {
+				ok, detail := punishment.Execute("desktop_notification", "", punishMsg)
+				punishOK = ok
+				if !ok {
+					punishErr = detail
+				}
+			}
+
+			t.Status = "failed"
+			t.FailReason = "deadline passed (auto-check)"
+			t.FailedAt = now.Format(time.RFC3339)
+
+			h := LoadHistory()
+			h.Failed = append(h.Failed, t)
+			SaveHistory(h)
+			delete(ts.Active, t.ID)
+
+			results = append(results, CheckResult{
+				TaskID:          t.ID,
+				Description:     t.Description,
+				Action:          "deadline_failed",
+				PunishmentSent:  punishOK,
+				PunishmentError: punishErr,
+			})
+		}
+	}
+
+	// Save updated warning states (and removed tasks)
+	if err := SaveTasks(ts); err != nil {
+		return results, err
+	}
+	return results, nil
 }
 
 // Status returns active tasks with remaining time.

@@ -52,6 +52,17 @@ If the user didn't provide a why, ask for one. If they say "I don't know," push:
 - Reference the why: "You're doing this because: {why}. Let's go."
 - Autonomy framing: "You chose this. That means you already believe you can do it."
 
+### Automated Execution
+Warnings and punishments are executed directly by the nudge CLI — not by the agent. Set up a single daemon or cron that runs `nudge task check` every 30 seconds during active tasks:
+```bash
+# Option A: daemon (foreground, stops with Ctrl+C)
+nudge task daemon --interval 30
+
+# Option B: cron via openclaw (fires check periodically)
+# Create ONE cron that runs: nudge task check
+```
+Do NOT create individual crons per warning interval. The `check` command handles all active tasks, firing any overdue warnings and auto-failing past-deadline tasks.
+
 ### Reminder Early (50% mark)
 - Gentle value reminder: "Remember why this matters: {why}. You've got {time} left."
 - Reference competence if available: "You've been on a streak — keep it going."
