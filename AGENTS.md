@@ -30,7 +30,6 @@ nudge/
 ├── .claude/skills/         # Symlink → .agents/skills/
 ├── .github/workflows/      # CI (release on tag push)
 ├── .goreleaser.yaml        # Cross-platform build + Homebrew formula config
-├── install.sh              # curl-based installer
 ├── docs/                   # Documentation
 └── AGENTS.md               # This file
 ```
@@ -66,7 +65,7 @@ Alternatively, pushing a `v*` tag triggers the same process via GitHub Actions (
 brew install neilsanghrajka/tap/nudge
 
 # curl
-curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/scripts/install.sh | sh
 
 # Go
 go install github.com/neilsanghrajka/nudge/cli/cmd/nudge@latest

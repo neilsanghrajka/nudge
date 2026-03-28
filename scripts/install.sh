@@ -1,6 +1,6 @@
 #!/bin/sh
 # Install script for nudge CLI
-# Usage: curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/install.sh | sh
+# Usage: curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/scripts/install.sh | sh
 
 set -e
 

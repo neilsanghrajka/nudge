@@ -24,7 +24,7 @@ brew install neilsanghrajka/tap/nudge
 
 ### Shell script (macOS and Linux)
 ```bash
-curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/neilsanghrajka/nudge/main/scripts/install.sh | sh
 ```
 
 ### Go install (requires Go toolchain)
