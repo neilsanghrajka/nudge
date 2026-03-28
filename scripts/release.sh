@@ -7,7 +7,8 @@
 #
 # Prerequisites:
 #   brew install goreleaser gh
-#   export TAP_GITHUB_TOKEN=ghp_...      # PAT with repo scope for homebrew-tap
+#   gh secret set TAP_GITHUB_TOKEN       # store PAT in GitHub repo secrets
+#   (or export TAP_GITHUB_TOKEN=ghp_...) # alternatively, set it manually
 
 set -e
 
@@ -41,10 +42,22 @@ for cmd in goreleaser gh git; do
   fi
 done
 
+# Get TAP_GITHUB_TOKEN from GitHub secrets via gh CLI if not already set
 if [ -z "$TAP_GITHUB_TOKEN" ]; then
-  echo "Error: TAP_GITHUB_TOKEN is not set."
-  echo "  export TAP_GITHUB_TOKEN=ghp_..."
-  exit 1
+  echo "TAP_GITHUB_TOKEN not set, fetching from GitHub environment..."
+  TAP_GITHUB_TOKEN=$(gh secret list -R neilsanghrajka/nudge 2>/dev/null | grep -q TAP_GITHUB_TOKEN && gh auth token 2>/dev/null || true)
+  if [ -z "$TAP_GITHUB_TOKEN" ]; then
+    # Fall back to gh auth token — works if the gh CLI PAT has repo scope on homebrew-tap
+    TAP_GITHUB_TOKEN=$(gh auth token 2>/dev/null || true)
+  fi
+  if [ -z "$TAP_GITHUB_TOKEN" ]; then
+    echo "Error: Could not get TAP_GITHUB_TOKEN."
+    echo "  Either: export TAP_GITHUB_TOKEN=ghp_..."
+    echo "  Or:     gh auth login (with a token that has repo scope)"
+    exit 1
+  fi
+  export TAP_GITHUB_TOKEN
+  echo "Using token from gh auth."
 fi
 
 # Check for uncommitted changes
