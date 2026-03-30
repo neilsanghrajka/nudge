@@ -182,7 +182,7 @@ func taskAdd(args []string) {
 		secrets.MarkUsed(secretID)
 	}
 
-	t, err := task.Add(desc, duration, why, punishAction, targetList, punishMsg)
+	t, results, err := task.Add(desc, duration, why, punishAction, targetList, punishMsg)
 	if err == nil && secretID != "" {
 		// Store secret ID on task for marking revealed on fail
 		ts := task.LoadTasks()
@@ -197,7 +197,7 @@ func taskAdd(args []string) {
 	}
 
 	crons := task.CronJobsForTask(t)
-	outputOK("task add", map[string]any{"task": t, "crons": crons})
+	outputOK("task add", map[string]any{"task": t, "crons": crons, "messages_sent": results})
 	if !jsonMode {
 		fmt.Printf("\n  Task created: %s\n", t.ID)
 		fmt.Printf("  Description: %s\n", t.Description)
@@ -207,6 +207,9 @@ func taskAdd(args []string) {
 		fmt.Printf("  Duration: %d min\n", t.DurationMinutes)
 		fmt.Printf("  Deadline: %s\n", t.Deadline)
 		fmt.Printf("  Punishment: %s\n", t.PunishmentAction)
+		if len(results) > 0 {
+			fmt.Printf("  Commitment messages sent: %d\n", len(results))
+		}
 		fmt.Printf("  Warnings: %d scheduled\n", len(t.WarningIntervals))
 		fmt.Printf("  Create %d one-shot openclaw cron job(s):\n", len(crons))
 		for _, cron := range crons {
