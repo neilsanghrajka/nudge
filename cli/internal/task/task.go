@@ -152,8 +152,8 @@ func CancelCronNames(t *Task) []string {
 	return names
 }
 
-// Add creates a new task and saves it.
-func Add(desc string, durationMin int, why string, punishAction string, targets []string, punishMsg string) (*Task, error) {
+// Add creates a new task, saves it, and optionally sends a commitment announcement.
+func Add(desc string, durationMin int, why string, punishAction string, targets []string, punishMsg string) (*Task, []punishment.SendResult, error) {
 	ts := LoadTasks()
 	id := fmt.Sprintf("task-%d", ts.NextID)
 	ts.NextID++
@@ -181,9 +181,20 @@ func Add(desc string, durationMin int, why string, punishAction string, targets 
 
 	ts.Active[id] = t
 	if err := SaveTasks(ts); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return t, nil
+
+	var results []punishment.SendResult
+	if t.PunishmentAction != "" && t.PunishmentAction != "desktop_notification" && len(t.Targets) > 0 {
+		msg := fmt.Sprintf(
+			"🔥 New commitment: '%s' — Deadline: %s. If I fail: punishment will be executed. — Nudge",
+			t.Description,
+			deadline.Local().Format("Mon Jan 2, 3:04 PM MST"),
+		)
+		results, _, _ = executePunishment(t, msg)
+	}
+
+	return t, results, nil
 }
 
 // Complete marks a task as done, sends all-clear messages, moves to history.
